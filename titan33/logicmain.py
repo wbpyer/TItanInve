@@ -51,13 +51,13 @@ def check_and_make_directories(directories: List[str]):
 check_and_make_directories([DATA_SAVE_DIR, TRAINED_MODEL_DIR, TENSORBOARD_LOG_DIR, RESULTS_DIR])
 
 
+ticker_list = ['600243.SH', '688365.SH', '831906.SZ', '301622.SZ', '920098.SZ', '838670.SZ', '002193.SZ', '002633.SZ', '603825.SH', '870726.SZ', '834407.SZ'] 
+#ticker_list = ['600243.SH', '688365.SH', '831906.SZ', '301622.SZ', '920098.SZ', '838670.SZ', '002193.SZ', '002633.SZ', '603825.SH', '870726.SZ', '834407.SZ']
 
-ticker_list = ['600000.SH', '600009.SH', '600016.SH', '600028.SH', '600030.SH', '600031.SH', '600036.SH', '600050.SH', '600104.SH', '600196.SH', '600276.SH', '600309.SH', '600519.SH', '600547.SH', '600570.SH']
-
-TRAIN_START_DATE = '2015-01-01' 
-TRAIN_END_DATE= '2019-08-01' 
-TRADE_START_DATE = '2019-08-01' 
-TRADE_END_DATE = '2020-01-03'
+TRAIN_START_DATE = '2022-01-01' 
+TRAIN_END_DATE= '2022-08-01' 
+TRADE_START_DATE = '2022-08-02' 
+TRADE_END_DATE = '2022-12-03'
 
 TIME_INTERVAL = "1d" 
 kwargs = {} 
@@ -84,7 +84,7 @@ print(f"train.head(): {train.head()}")
 print(f"train.shape: {train.shape}")
 
 
-# Data Preprocessing
+#  Data Preprocessing
 stock_dimension = len(train.tic.unique()) 
 state_space = stock_dimension * (len(config.INDICATORS) + 2) + 1 
 print(f"Stock Dimension: {stock_dimension}, State Space: {state_space}")
@@ -157,13 +157,14 @@ trade.rename(columns={'date':'time'},inplace=True)
 
 
 plotter = ReturnPlotter(df_account_value_ddpg, trade, TRADE_START_DATE, TRADE_END_DATE)
-plotter.plot()
+plotter.plot("DDPG", "green")
+
 
 plotter = ReturnPlotter(df_account_value_a2c, trade, TRADE_START_DATE, TRADE_END_DATE)
-plotter.plot()
+plotter.plot("A2C", "red")
 
 
-# plotter.plot("000016")
+plotter.plot("000016", "black")
 # baseline_df = plotter.get_baseline("399300")
 
 

@@ -1,0 +1,6 @@
+{
+    "python.analysis.extraPaths": [
+        "./Ru2h-Meta/meta/data_processors",
+        "./Ru2h-Meta"
+    ]
+}

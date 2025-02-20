@@ -1,19 +1,26 @@
 <template>
   <div class="tradingview-style-app">
     <div class="tv-header">
-      <h1>基于强化学习的股票趋势投资系统</h1>
+      <div class="tv-logo">
+        <!-- SVG Logo -->
+        <svg width="50" height="50" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="48" stroke="#4a90e2" stroke-width="4" fill="none" />
+          <text x="50%" y="50%" text-anchor="middle" fill="#4a90e2" font-size="24" font-family="Roboto" dy=".3em">W33B</text>
+        </svg>
+      </div>
+      <h1>基于大模型的股票投资系统</h1>
     </div>
     <div class="tv-container">
       <div class="tv-sidebar">
         <!-- 股票选择 -->
         <div class="tv-sidebar-section">
           <h2>选择股票</h2>
-          <ul class="tv-stock-list">
-            <li v-for="stock in stocks" :key="stock.symbol">
-              <input type="checkbox" :value="stock.symbol" v-model="selectedStocks" />
+          <input type="text" v-model="searchQuery" placeholder="搜索股票..." class="tv-search-input" />
+          <select v-model="selectedStocks" multiple class="tv-multi-select">
+            <option v-for="stock in filteredStocks" :key="stock.symbol" :value="stock.symbol">
               {{ stock.name }} ({{ stock.symbol }})
-            </li>
-          </ul>
+            </option>
+          </select>
         </div>
         <!-- 算法选择 -->
         <div class="tv-sidebar-section">
@@ -26,21 +33,20 @@
         <!-- 时间选择 -->
         <div class="tv-sidebar-section">
           <h2>选择训练时间范围</h2>
-          <input type="date" v-model="selectedStartTime" class="tv-date-picker" />
-          至
-          <input type="date" v-model="selectedEndTime" class="tv-date-picker" />
+          <div class="tv-date-range">
+            <input type="date" v-model="selectedStartTime" class="tv-date-picker" />
+            <span>至</span>
+            <input type="date" v-model="selectedEndTime" class="tv-date-picker" />
+          </div>
         </div>
         <div class="tv-sidebar-section">
           <h2>选择预测时间范围</h2>
-          <input type="date" v-model="selectedStartTradeTime" class="tv-date-picker" />
-          至
-          <input type="date" v-model="selectedEndTradeTime" class="tv-date-picker" />
+          <div class="tv-date-range">
+            <input type="date" v-model="selectedStartTradeTime" class="tv-date-picker" />
+            <span>至</span>
+            <input type="date" v-model="selectedEndTradeTime" class="tv-date-picker" />
+          </div>
         </div>
-        <!-- 启动训练按钮 -->
-        <button @click="startTraining" class="tv-btn">启动训练</button>
-        <button @click="showCapitalCurve" class="tv-btn">查看回测资金曲线</button>
-        <button @click="showTrainingResults" class="tv-btn">查看回测结果</button>
-        
       </div>
       <div class="tv-main-content">
         <!-- 配置摘要 -->
@@ -61,30 +67,44 @@
             预测时间范围: {{ selectedStartTradeTime }} 至 {{ selectedEndTradeTime }}
           </div>
         </div>
+        <!-- 按钮组 -->
+        <div class="tv-button-group">
+          <button @click="startTraining" class="tv-btn">启动训练</button>
+          <button @click="showCapitalCurve" class="tv-btn">查看回测资金曲线</button>
+          <button @click="showTrainingResults" class="tv-btn">查看回测结果</button>
+        </div>
         <div v-if="showTrainingResultsModal" class="training-results-modal">
           <h2>回测结果</h2>
           <table>
-      <thead>
-        <tr>
-          <th>指标</th>
-          <th v-for="agent in Object.keys(performanceData)" :key="agent">{{ agent }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(metric, index) in Object.keys(performanceData[Object.keys(performanceData)[0]])" :key="index">
-          <th>{{ metric }}</th>
-          <td v-for="(agent, i) in Object.keys(performanceData)" :key="i">{{ formatValue(performanceData[agent][metric]) }}</td>
-        </tr>
-      </tbody>
-    </table>
+            <thead>
+              <tr>
+                <th>指标</th>
+                <th v-for="agent in Object.keys(performanceData)" :key="agent">{{ agent }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(metric, index) in Object.keys(performanceData[Object.keys(performanceData)[0]])" :key="index">
+                <th>{{ metric }}</th>
+                <td v-for="(agent, i) in Object.keys(performanceData)" :key="i">{{ formatValue(performanceData[agent][metric]) }}</td>
+              </tr>
+            </tbody>
+          </table>
           <button @click="hideTrainingResults" class="tv-btn">关闭</button>
         </div>
       </div>
     </div>
     <div v-if="showCapitalCurveModal" class="capital-curve-modal">
-    <img :src="capitalCurveImageUrl" alt="Capital Curve" />
-    <button @click="hideCapitalCurve" class="tv-btn">关闭</button>
-  </div>
+      <img :src="capitalCurveImageUrl" alt="Capital Curve" />
+      <button @click="hideCapitalCurve" class="tv-btn">关闭</button>
+    </div>
+    <!-- 自定义警告模态框 -->
+    <div v-if="showAlert" class="custom-alert-modal">
+      <div class="custom-alert-content">
+        <h2>警告</h2>
+        <p>{{ alertMessage }}</p>
+        <button @click="closeAlert" class="tv-btn">关闭</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -245,33 +265,52 @@ export default {
   }
 };
 </script>
-
 <style scoped>
-/* 添加 TradingView 风格的样式 */
 .tradingview-style-app {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #131722;
-  font-family: 'Open Sans', sans-serif;
-  color: #fff;
+  background-color: #1e1e2f;
+  font-family: 'Roboto', sans-serif;
+  color: #e0e0e0;
+  padding: 20px;
 }
 
 .tv-header {
+  display: flex;
+  align-items: center;
   padding: 20px;
-  background-color: #0b0f13;
+  background-color: #28293e;
   text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  margin-bottom: 20px;
+}
+
+.tv-logo {
+  margin-right: 20px;
 }
 
 .tv-container {
   display: flex;
   flex-grow: 1;
+  gap: 20px;
 }
 
 .tv-sidebar {
   flex: 0 0 250px;
-  background-color: #0b0f13;
+  background-color: #28293e;
   padding: 20px;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.tv-main-content {
+  flex-grow: 1;
+  background-color: #1e1e2f;
+  overflow-x: auto;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .tv-sidebar-section {
@@ -279,33 +318,49 @@ export default {
 }
 
 .tv-sidebar-section h2 {
-  margin-bottom: 70px;
+  margin-bottom: 20px;
+  color: #4a90e2;
 }
 
-.tv-stock-list {
-  list-style: none;
-  padding: 0;
+.tv-search-input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  border: 1px solid #555;
+  background-color: #333;
+  color: #e0e0e0;
 }
 
-.tv-stock-list li {
-  display: flex;
-  align-items: center;
-  margin-bottom: 5px;
+.tv-multi-select {
+  width: 100%;
+  height: 150px;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #555;
+  background-color: #333;
+  color: #e0e0e0;
+  overflow-y: auto;
 }
-
 
 .tv-select, .tv-date-picker {
   padding: 8px 10px;
-  background-color: #fff; /* 浅色背景 */
-  color: #333; /* 深色文本 */
-  border: 1px solid #ccc; /* 灰色边框 */
+  background-color: #333;
+  color: #e0e0e0;
+  border: 1px solid #555;
   border-radius: 4px;
   font-size: 14px;
-  transition: border-color 0.3s;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  width: 100%;
+  margin-bottom: 10px;
 }
-.tv-date-picker:hover {
-    border-color: #4a90e2; /* 鼠标悬停时的边框颜色 */
-  }
+
+.tv-date-range {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .tv-btn {
   padding: 10px 20px;
   background-color: #4a90e2;
@@ -313,167 +368,153 @@ export default {
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s, transform 0.3s;
+  width: 100%;
+  margin-bottom: 10px;
 }
 
 .tv-btn:hover {
   background-color: #3d7ec1;
+  transform: translateY(-2px);
 }
 
-.tv-main-content {
-  flex-grow: 1;
-  background-color: #131722;
-  overflow-x: auto;
-  margin-top: 20px; /* 顶部外边距 */
-  margin-left: 420px; /* 左侧外边距 */
-  margin-right: 420px;
+.tv-button-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.capital-curve-modal, .training-results-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9); /* 更深的背景以突出内容 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  opacity: 0;
+  animation: fadeIn 0.3s forwards;
+}
+
+.training-results-modal {
+  background-color: #2a2a3b;
+  padding: 40px; /* 增加内边距 */
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  width: 90%; /* 几乎占满整个屏幕宽度 */
+  height: 90%; /* 几乎占满整个屏幕高度 */
+  overflow-y: auto;
+}
+
+.training-results-modal button {
+  padding: 10px 20px;
+  background-color: #4a90e2;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.3s;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+
+.training-results-modal button:hover {
+  background-color: #3d7ec1;
+  transform: translateY(-2px);
+}
+
+.performance-comparison {
+  margin: 20px;
+  font-family: 'Roboto', sans-serif;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin-top: 20px;
+}
+
+th, td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #444;
+}
+
+thead th {
+  background-color: #4a90e2;
+  color: #fff;
+}
+
+td {
+  font-weight: lighter;
+}
+
+td:nth-child(even) {
+  background-color: #2a2a3b;
+}
+
+th, td {
+  transition: background-color 0.3s;
+}
+
+th:hover, td:hover {
+  background-color: #3d3d4f;
+}
+
+th {
+  text-transform: uppercase;
+  font-size: 0.8em;
+  letter-spacing: 0.5px;
+  padding: 10px 5px;
+}
+
+td {
+  font-size: 0.9em;
+  padding: 15px 5px;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.custom-alert-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 20;
+  animation: fadeIn 0.3s forwards;
+}
+
+.custom-alert-content {
+  background-color: #2a2a3b;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+}
+
+.custom-alert-content h2 {
+  color: #e0e0e0;
   margin-bottom: 20px;
-  padding: 20px; /* 内边距 */
 }
 
-.tv-summary {
-  margin-bottom: 30px;
+.custom-alert-content p {
+  color: #e0e0e0;
+  margin-bottom: 20px;
 }
-
-.tv-summary h2 {
-  margin-bottom: 15px;
-}
-
-.tv-summary ul {
-  list-style: none;
-  padding: 0;
-}
-
-.tv-summary li {
-  margin-bottom: 5px;
-}
-
-.capital-curve-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 10;
-  }
-
-  .capital-curve-modal img {
-    max-width: 80%;
-    max-height: 80%;
-  }
-
-  .training-results-modal {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: hsl(85, 67%, 56%);
-    padding: 20px;
-    border-radius: 4px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    z-index: 10;
-    width: 80%;
-    max-width: 600px;
-  }
-
-  .training-results-modal form {
-    margin-bottom: 20px;
-  }
-
-  .training-results-modal .result-item {
-    margin-bottom: 10px;
-  }
-
-  .training-results-modal label {
-    display: inline-block;
-    width: 100px;
-  }
-
-  .training-results-modal button {
-
-
-    padding: 20px; /* 内边距 */
-  }
-
-  .performance-comparison {
-    margin: 20px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-  }
-
-  th, td {
-    padding: 10px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-  }
-
-  thead th {
-    background-color: #007bff;
-    color: rgb(194, 26, 26);
-  }
-
-  td {
-    font-weight: lighter;
-  }
-
-  td:nth-child(even) {
-    background-color: #0f0303;
-  }
-
-  th, td {
-    position: relative;
-  }
-
-  th:before,
-  td:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    background-color: #0f0303;
-    box-shadow: inset 0 0 1px #ddd;
-  }
-
-  th:first-child:before,
-  td:first-child:before {
-    box-shadow: inset 0 0 1px #ddd, inset 0 2px 0 #fff;
-  }
-
-  th:last-child:before,
-  td:last-child:before {
-    box-shadow: inset 0 0 1px #ddd, inset 2px 0 0 #fff;
-  }
-
-  th, td {
-    transition: background-color 0.3s;
-  }
-
-  th:hover,
-  td:hover {
-    background-color: #e9ecef;
-  }
-
-  th {
-    text-transform: uppercase;
-    font-size: 0.8em;
-    letter-spacing: 0.5px;
-    padding: 10px 5px;
-  }
-
-  td {
-    font-size: 0.9em;
-    padding: 15px 5px;
-  }
 </style>

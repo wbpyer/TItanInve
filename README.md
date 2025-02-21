@@ -1,78 +1,91 @@
-TItanInve GitHub Stars License
-简洁有力的项目描述
-（例如：一个基于Python的高性能投资分析工具，支持数据抓取、策略回测与可视化。）
 
-🚀 功能特性
-核心功能1：简要说明功能亮点（如：多源金融数据实时抓取）；
 
-核心功能2：支持策略自定义与历史回测；
 
-技术亮点：结合机器学习模型预测市场趋势（可补充技术栈，如Django/Pandas）；
+# TItanInve [![GitHub Stars](https://img.shields.io/github/stars/wbpyer/TItanInve?style=social)](https://github.com/wbpyer/TItanInve) [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-扩展性：模块化设计，支持插件扩展26。
+ 基于大模型的量化投资分析工具，提供数据采集、策略回测与可视化的一站式解决方案
 
-📦 安装指南
-环境要求
-Python 3.8+
 
-MySQL 5.7+ / SQLite（数据库依赖）
+## 🚀 核心功能
+- **多源数据集成**：支持股票、基金、加密货币的实时/历史数据抓取
+- **策略回测引擎**：内置MA、RSI等经典策略，支持自定义策略回测
+- **大模型扩展**：集成LSTM、Prophet等模型进行趋势预测
+- **可视化看板**：生成交互式K线图、收益曲线和风险指标热力图
+---
+## 📦 环境要求
+- Python 3.8+
+- Redis 6.0+ (缓存服务)
+- MySQL 8.0+ 或 PostgreSQL 14+
 
-Git（版本管理）
+---
 
-安装步骤
-bash
-复制
-# 克隆仓库
-git clone https://github.com/wbpyer/TItanInve.git
-cd TItanInve
+## 🛠️ arch
+本项目为前后端分离架构，前端vue3,  后端Python。
+titan33-app 为前端。
+titan33 为后端。
+
+---
+
+## 📦 快速docker安装
+待补充
+
+---
+
+## 📦 命令行安装
+```bash
+# 克隆项目并进入目录
+git clone https://github.com/wbpyer/TItanInve.git && cd TItanInve
+
+# 创建虚拟环境（推荐）
+python -m venv venv && source venv/bin/activate
 
 # 安装依赖
 pip install -r requirements.txt
 
-# 配置环境变量（示例）
-export API_KEY=your_api_key_here
-🛠️ 使用示例
-快速启动
-python
-复制
-from titaninve import Analyzer
+# 配置环境变量
+cp .env.example .env  # 修改你的API密钥和数据库配置
+```
 
-analyzer = Analyzer(config_path="config.yaml")
-results = analyzer.run_backtest(start_date="2023-01-01")
-print(results.summary())
-配置文件示例
-创建 config.yaml：
+---
 
-yaml
-复制
-data_sources:
-  - type: "stock"
-    api: "alpha_vantage"
-  strategy:
-    name: "moving_average"
-    params:
-      window: 30
-📊 数据可视化（可选）
-插入项目截图或GIF（参考格式）：
-Demo810
 
-🤝 贡献指南
-Fork项目并创建分支：git checkout -b feature/your-idea；
 
-提交代码并描述修改内容；
+## 快速开始
 
-发起Pull Request，关联Issue（如有）56。
-详见 CONTRIBUTING.md。
+待补充
+---
 
-📜 许可证
-本项目基于 MIT License 开源，可自由使用与修改210。
 
-🙏 鸣谢
-灵感来源于《量化投资策略与技术》；
 
-感谢 Apache Airflow 提供任务调度支持13。
+## 📊 可视化效果
+![image](https://github.com/user-attachments/assets/9ec8586a-07c2-4e6d-92d9-2d2b5d7d9605)
 
-📞 联系与支持
-提交Issue：https://github.com/wbpyer/TItanInve/issues
 
-邮箱：support@titaninve.com
+---
+
+## 🤝 参与贡献
+欢迎通过以下方式参与：
+1. 提交Issue报告问题或建议
+2. Fork项目并提交Pull Request
+3. 完善项目文档
+
+代码规范：
+- 使用PEP8代码风格
+- 新增功能需包含单元测试
+- 提交信息遵循 [Conventional Commits](https://www.conventionalcommits.org/)
+
+---
+
+## 📜 开源协议
+本项目采用 [MIT License](LICENSE)，可自由用于商业用途。
+
+---
+
+## 📞 联系我们
+- 项目维护者：wbpyer
+- 问题反馈：[Issues页面](https://github.com/wbpyer/TItanInve/issues)
+- 商务合作：wang63285625@126.com
+
+
+
+
